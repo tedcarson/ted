@@ -492,6 +492,7 @@ select base.*,
             else null end as coll_comp_on_current_policy,
 
        -- Quoted premium, which depends on invoice period; for unbound new business we don\'t know what invoice period they were considering, so we make an assumption based on our existing invoice period mix and take a weighted average
+       -- Would it be helpful if we just picked one to look at?
        case when base.invoice_period = 'monthly' then pi.monthly_bi_premium_in_dollars + pi.monthly_pd_premium_in_dollars
             when base.invoice_period = 'full_term' then pi.paid_in_full_bi_premium_in_dollars + pi.paid_in_full_pd_premium_in_dollars
             else .3 * (pi.paid_in_full_bi_premium_in_dollars + pi.paid_in_full_pd_premium_in_dollars) + .7 * (pi.monthly_bi_premium_in_dollars + pi.monthly_pd_premium_in_dollars) end as bi_pd_quoted_premium,
