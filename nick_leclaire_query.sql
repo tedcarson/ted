@@ -4,7 +4,7 @@ select * from (select rr.*,
                from server_public.rating_requests as rr
                join server_public.profile_rating_data as prd on prd.id = rr.profile_rating_data_id
                join server_public.profiles as p on p.id = prd.profile_id
-               where rr.reason in ('new-business', 'rerate', 'override')
+               where rr.reason in ('new-business', 'rerate', 'override') --These seem right, I would be careful these are exatly the reasons you want.
     ) where row_number = 1
 ),
 
@@ -67,8 +67,17 @@ from (select *,
                    0 as prior_policy_term_count,
                    pt.invoice_period as invoice_period,
                    true as bound,
-                   case when datediff('days', q.created_at, '2018-12-31') < 35 then null else true end as bound_within_35_days,
-                   case when datediff('days', q.created_at, '2018-12-31') < 70 then null else true end as bound_within_70_days
+                    --Not sure your intentin but metrics like these are usually quote to bind times. I also changed it to a binary so null mean they havent had the quote long enough
+                   case
+                    WHEN  datediff('days', q.created_at, getdate()) < 35 THEN NULL
+                    when datediff('days', q.created_at, iptr.created_at) < 35 then 0
+                    else 1
+                  end as bound_within_35_days,
+                   case
+                    WHEN  datediff('days', q.created_at, getdate()) < 35 THEN NULL
+                    when datediff('days', q.created_at, iptr.created_at) < 70 then 0
+                    else 1
+                  end as bound_within_70_days
             from server_public.quotes as q
             join server_public.rates as r on r.id = q.rate_id
             join latest_nb_rating_requests as rr on rr.rate_id = r.id
